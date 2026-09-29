@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  ejbca-pqc:
+    image: keyfactor/ejbca-ce:latest
+    container_name: ejbca-pqc-lab
+    hostname: ejbca.pqc.local
+    environment:
+      #- TLS_SETUP_ENABLED=true
+      - TLS_SETUP_ENABLED=simple
+      - LOG_LEVEL_APP=INFO
+    ports:
+      - "80:8080"   # HTTP Admin / RA enrollment
+      - "443:8443" # HTTPS Client-certificate authenticated interface
+    volumes:
+      - ejbca_data:/var/lib/ejbca
+    restart: unless-stopped
+
+volumes:
+  ejbca_data:
