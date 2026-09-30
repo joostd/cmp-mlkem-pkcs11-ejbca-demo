@@ -56,12 +56,13 @@ public class CmpKemRequest {
 
     public static void main(String[] args) throws Exception {
         if (args.length < 4) {
-            System.err.println("Usage: CmpKemRequest <CN> <password> <pubkey.der> <request-out.der>");
+            System.err.println("Usage: CmpKemRequest <subject-dn> <password> <pubkey.der> <request-out.der>");
+            System.err.println("  subject-dn example: \"CN=John Doe,emailAddress=jd@example.com\"");
             System.exit(1);
         }
         Security.addProvider(new BouncyCastleProvider());
 
-        String cn = args[0];
+        String subjectDn = args[0];
         char[] password = args[1].toCharArray();
         String pubKeyIn = args[2];
         String requestOut = args[3];
@@ -69,7 +70,7 @@ public class CmpKemRequest {
         byte[] pubKeyBytes = Files.readAllBytes(Paths.get(pubKeyIn));
         SubjectPublicKeyInfo spki = SubjectPublicKeyInfo.getInstance(pubKeyBytes);
 
-        X500Name subject = new X500Name("CN=" + cn);
+        X500Name subject = new X500Name(subjectDn);
         CertTemplate certTemplate = new CertTemplateBuilder()
                 .setSubject(subject)
                 .setPublicKey(spki)
@@ -97,7 +98,7 @@ public class CmpKemRequest {
         PKIHeaderBuilder headerBuilder = new PKIHeaderBuilder(PKIHeader.CMP_2021, sender, recipient)
                 .setMessageTime(new ASN1GeneralizedTime(new Date()))
                 .setProtectionAlg(protectionAlg)
-                .setSenderKID(cn.getBytes("UTF-8"))
+                .setSenderKID(subjectDn.getBytes("UTF-8"))
                 .setTransactionID(transactionId)
                 .setSenderNonce(senderNonce);
         PKIHeader header = headerBuilder.build();
@@ -120,7 +121,7 @@ public class CmpKemRequest {
 
         Files.write(Paths.get(requestOut), requestBytes);
 
-        System.out.println("Wrote CMPv3 ir request (pvno=3, keyEncipherment/encrCert POP) for CN=" + cn
+        System.out.println("Wrote CMPv3 ir request (pvno=3, keyEncipherment/encrCert POP) for subject=" + subjectDn
                 + " using public key " + pubKeyIn + " to " + requestOut);
         System.out.println();
         System.out.println("POST it with:");
